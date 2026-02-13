@@ -311,7 +311,8 @@ namespace Main
                         ser.WriteLine("2");
                     }
                     interval = Math.Abs(int.Parse(message.Split(':')[1]));
-                    string msg = string.Format("{0:d2},{1:d2}", (int)TimeSpan.FromMilliseconds(Math.Abs(float.Parse(interval.ToString()))).TotalSeconds, (int)TimeSpan.FromMilliseconds(Math.Abs(float.Parse(interval.ToString()))).Milliseconds / 10);
+                    double time_interval = double.Parse(interval.ToString()) * CorrectionCoeff;
+                    string msg = string.Format("{0:d2},{1:d2}", (int)TimeSpan.FromMilliseconds(Math.Abs(time_interval)).TotalSeconds, (int)TimeSpan.FromMilliseconds(Math.Abs(time_interval)).Milliseconds / 10);
 
                     DialogResult dialogResult = MessageBox.Show(msg, "Время", MessageBoxButtons.YesNo);
                     if (dialogResult == DialogResult.Yes)
@@ -322,7 +323,7 @@ namespace Main
                             MessageBox.Show("Не выбрано строк");
                             return;
                         }
-                        upd_Time(TimeSpan.FromMilliseconds(Math.Abs(float.Parse(interval.ToString()))));
+                        upd_Time(TimeSpan.FromMilliseconds(Math.Abs(time_interval)));
                         update_penalties();
                     }
                     else if (dialogResult == DialogResult.No)
@@ -444,7 +445,7 @@ namespace Main
             }
             else
             {
-                MessageBox.Show("Проблема в функции");
+                MessageBox.Show("Проблема в функции пересчета времени");
             }
         }
 
