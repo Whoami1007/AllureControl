@@ -1216,7 +1216,7 @@ namespace Main
             }
             else
             {
-                tb.Text = Math.Round(CorrectionCoeff, 4).ToString();
+                tb.Text = Math.Round(CorrectionCoeff, 7).ToString();
                 MessageBox.Show("Введено некорректное значение", "Ошибка");
             }
 
