@@ -70,6 +70,10 @@
             toolStripMenuItem12 = new ToolStripMenuItem();
             toolStripMenuItem13 = new ToolStripMenuItem();
             очиститьToolStripMenuItem1 = new ToolStripMenuItem();
+            коэффициентПересчётаToolStripMenuItem = new ToolStripMenuItem();
+            сохарнитьКоэффициентToolStripMenuItem = new ToolStripMenuItem();
+            загрузитьКоэффициентToolStripMenuItem = new ToolStripMenuItem();
+            toolStripTextBox1 = new ToolStripTextBox();
             button2 = new Button();
             panel1 = new Panel();
             tableLayoutPanel3 = new TableLayoutPanel();
@@ -131,11 +135,8 @@
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.Size = new Size(1070, 501);
             dataGridView1.TabIndex = 2;
-            dataGridView1.CellClick += dataGridView1_CellEndEdit;
-            dataGridView1.CellContentClick += dataGridView1_CellEndEdit;
-            dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
-            dataGridView1.CellValueChanged += dataGridView1_CellEndEdit;
-            dataGridView1.DataError += dataGridView1_DataError;
+            dataGridView1.CellValueChanged += dataGridView1_CellValueChanged;
+            dataGridView1.CurrentCellDirtyStateChanged += dataGridView1_CurrentCellDirtyStateChanged;
             // 
             // Number
             // 
@@ -261,7 +262,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { файлToolStripMenuItem, очиститьToolStripMenuItem, протяжённостьДистанцииToolStripMenuItem, используемыеАллюрыToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { файлToolStripMenuItem, очиститьToolStripMenuItem, протяжённостьДистанцииToolStripMenuItem, используемыеАллюрыToolStripMenuItem, коэффициентПересчётаToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(1395, 24);
@@ -417,6 +418,34 @@
             очиститьToolStripMenuItem1.Text = "Очистить";
             очиститьToolStripMenuItem1.Click += очиститьToolStripMenuItem1_Click;
             // 
+            // коэффициентПересчётаToolStripMenuItem
+            // 
+            коэффициентПересчётаToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { сохарнитьКоэффициентToolStripMenuItem, загрузитьКоэффициентToolStripMenuItem, toolStripTextBox1 });
+            коэффициентПересчётаToolStripMenuItem.Name = "коэффициентПересчётаToolStripMenuItem";
+            коэффициентПересчётаToolStripMenuItem.Size = new Size(155, 20);
+            коэффициентПересчётаToolStripMenuItem.Text = "Коэффициент пересчёта";
+            // 
+            // сохарнитьКоэффициентToolStripMenuItem
+            // 
+            сохарнитьКоэффициентToolStripMenuItem.Name = "сохарнитьКоэффициентToolStripMenuItem";
+            сохарнитьКоэффициентToolStripMenuItem.Size = new Size(221, 22);
+            сохарнитьКоэффициентToolStripMenuItem.Text = "Сохарнить коэффициент...";
+            сохарнитьКоэффициентToolStripMenuItem.Click += сохарнитьКоэффициентToolStripMenuItem_Click;
+            // 
+            // загрузитьКоэффициентToolStripMenuItem
+            // 
+            загрузитьКоэффициентToolStripMenuItem.Name = "загрузитьКоэффициентToolStripMenuItem";
+            загрузитьКоэффициентToolStripMenuItem.Size = new Size(221, 22);
+            загрузитьКоэффициентToolStripMenuItem.Text = "Загрузить коэффициент...";
+            загрузитьКоэффициентToolStripMenuItem.Click += загрузитьКоэффициентToolStripMenuItem_Click;
+            // 
+            // toolStripTextBox1
+            // 
+            toolStripTextBox1.Name = "toolStripTextBox1";
+            toolStripTextBox1.Size = new Size(100, 23);
+            toolStripTextBox1.Text = "1";
+            toolStripTextBox1.KeyDown += toolStripTextBox1_KeyDown;
+            // 
             // button2
             // 
             button2.Dock = DockStyle.Fill;
@@ -476,7 +505,7 @@
             button6.Name = "button6";
             button6.Size = new Size(304, 97);
             button6.TabIndex = 20;
-            button6.Text = "Полная отмена участника";
+            button6.Text = "Полная отмена старта и финиша участника";
             button6.UseVisualStyleBackColor = true;
             button6.Click += button6_Click;
             // 
@@ -824,5 +853,9 @@
         private DataGridViewTextBoxColumn bonus;
         private DataGridViewTextBoxColumn penalty;
         private DataGridViewTextBoxColumn distance;
+        private ToolStripMenuItem коэффициентПересчётаToolStripMenuItem;
+        private ToolStripMenuItem сохарнитьКоэффициентToolStripMenuItem;
+        private ToolStripMenuItem загрузитьКоэффициентToolStripMenuItem;
+        private ToolStripTextBox toolStripTextBox1;
     }
 }

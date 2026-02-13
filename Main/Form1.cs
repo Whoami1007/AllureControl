@@ -24,8 +24,10 @@ namespace Main
         private bool isDataModified = false;
         private string currentFilePath = null;
 
+        private double CorrectionCoeff = 1.0;
+
         bool _continue = false;
-       
+
         int currentDist = 100;
         List<string> ids = new List<string>();
         SerialPort ser = new SerialPort();
@@ -321,6 +323,7 @@ namespace Main
                             return;
                         }
                         upd_Time(TimeSpan.FromMilliseconds(Math.Abs(float.Parse(interval.ToString()))));
+                        update_penalties();
                     }
                     else if (dialogResult == DialogResult.No)
                     {
@@ -423,6 +426,7 @@ namespace Main
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (comboBox1.SelectedItem is null) { return; }
             ser.PortName = comboBox1.SelectedItem.ToString();
         }
 
@@ -543,11 +547,6 @@ namespace Main
             }
         }
 
-        private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
-        {
-
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
             dataGridView1.Rows[dataGridView1.SelectedRows[0].Index].Cells[5].Value = "";
@@ -633,38 +632,6 @@ namespace Main
             catch (Exception ex)
             {
                 MessageBox.Show("Порт недоступен");
-            }
-        }
-
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            isDataModified = true;
-            //MessageBox.Show("Редактирование завершено");
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                /*
-                 * 1 заступ - 3 балла
-                 * 2 заступа - 6 баллов
-                 * 3 заступа - 10 баллов
-                 * */
-                if (row.Cells["time"].Value == null || row.Cells["time"].Value == string.Empty)
-                {
-                    continue;
-                }
-                if (row.Cells["RZ_Exit"].Value.ToString() == "true" || row.Cells["Sboy"].Value.ToString() == "true")
-                {
-                    row.Cells["bonus"].Value = 0;
-                    row.Cells["penalty"].Value = 30;
-                }
-                else
-                {
-                    string time = row.Cells["time"].Value.ToString();
-                    string distance = row.Cells["distance"].Value.ToString();
-                    int bonus = Find_in_table(time, AllureType(row), int.Parse(distance));
-                    row.Cells["bonus"].Value = bonus;
-                    row.Cells["penalty"].Value = 30 - bonus + Penalties_for_zastup(row);
-                }
-
             }
         }
 
@@ -757,22 +724,35 @@ namespace Main
 
         private void button4_Click(object sender, EventArgs e)
         {
+            update_penalties();
+        }
+
+        private void update_penalties()
+        {
+            dataGridView1.CellValueChanged -= dataGridView1_CellValueChanged;
             foreach (DataGridViewRow row in dataGridView1.Rows)
             {
+
+
+                row.Cells["bonus"].Value = 30;
+                row.Cells["penalty"].Value = 0;
                 /*
                  * 1 заступ - 3 балла
                  * 2 заступа - 6 баллов
                  * 3 заступа - 10 баллов
                  * */
-                if (row.Cells["time"].Value == null || row.Cells["time"].Value.ToString() == string.Empty)
+                if (row.Cells["time"].Value is null)
                 {
                     continue;
                 }
-                if (((bool)row.Cells["RZ_Exit"].Value == true) || ((bool)row.Cells["Sboy"].Value == true))
+                if (row.Cells["time"].Value == string.Empty)
                 {
-                    row.Cells["bonus"].Value = "0";
-                    row.Cells["penalty"].Value = "30";
                     continue;
+                }
+                if ((bool)row.Cells["RZ_Exit"].Value == true || (bool)row.Cells["Sboy"].Value == true || Penalties_for_zastup(row) < 0)
+                {
+                    row.Cells["bonus"].Value = 0;
+                    row.Cells["penalty"].Value = 30;
                 }
                 else
                 {
@@ -780,12 +760,12 @@ namespace Main
                     string distance = row.Cells["distance"].Value.ToString();
                     int bonus = Find_in_table(time, AllureType(row), int.Parse(distance));
                     row.Cells["bonus"].Value = bonus;
-                    if (Penalties_for_zastup(row) == -1)
-                        row.Cells["penalty"].Value = 30;
                     row.Cells["penalty"].Value = 30 - bonus + Penalties_for_zastup(row);
                 }
-
+                isDataModified = true;
             }
+            dataGridView1.CellValueChanged += dataGridView1_CellValueChanged;
+
         }
 
         public bool ExportToExcel(DataGridView dataGridView, string filePath)
@@ -926,7 +906,7 @@ namespace Main
 
                     // Варианты для ComboBox
                     string[] comboBoxItems = { "0", "1", "2", "3", "4+" };
-                    string[] col_names = { "Number", "id", "name", "HName", "type", "time", "RZ_Exit", "Sboy", "Zastyp", "bonus", "penalty", "distance"};
+                    string[] col_names = { "Number", "id", "name", "HName", "type", "time", "RZ_Exit", "Sboy", "Zastyp", "bonus", "penalty", "distance" };
 
                     // Создаем колонки на основе первой строки (заголовков)
                     for (int col = 1; col <= colCount; col++)
@@ -944,7 +924,7 @@ namespace Main
                             // Создаем колонку с ComboBox
                             DataGridViewComboBoxColumn comboBoxColumn = new DataGridViewComboBoxColumn();
                             comboBoxColumn.HeaderText = header;
-                            comboBoxColumn.Name = col_names[col-1];
+                            comboBoxColumn.Name = col_names[col - 1];
 
                             // Добавляем варианты выбора
                             comboBoxColumn.Items.AddRange(comboBoxItems);
@@ -1083,7 +1063,7 @@ namespace Main
             {
                 return;
             }
-            
+
             DialogResult result = MessageBox.Show(
                 "Есть несохраненные изменения. Хотите сохранить файл перед закрытием?",
                 "Сохранение изменений",
@@ -1119,5 +1099,127 @@ namespace Main
             }
         }
 
+        private void dataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            if (dataGridView1.CurrentCell is DataGridViewCheckBoxCell || dataGridView1.CurrentCell is DataGridViewComboBoxCell)
+            {
+                // Если изменение произошло, принудительно фиксируем его
+                // Это немедленно спровоцирует событие CellValueChanged
+                if (dataGridView1.IsCurrentCellDirty)
+                {
+                    dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                }
+            }
+        }
+
+        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            update_penalties();
+        }
+        private void сохарнитьКоэффициентToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveTextToFile(CorrectionCoeff.ToString());
+        }
+        private void загрузитьКоэффициентToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LoadTextFromFile();
+        }
+
+        private void toolStripTextBox1_CommandChanged(object sender, EventArgs e)
+        {
+            MessageBox.Show("Изменено");
+        }
+
+        private void SaveTextToFile(string textToSave)
+        {
+            // Создаем диалог сохранения файла
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+
+            // Настройки диалога
+            saveFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*";
+            saveFileDialog.FilterIndex = 1;
+            saveFileDialog.DefaultExt = "txt";
+            saveFileDialog.AddExtension = true;
+            saveFileDialog.Title = "Сохранить текстовый файл";
+            saveFileDialog.FileName = "coef";
+
+            // Показываем диалог и проверяем, нажал ли пользователь OK
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    // Сохраняем текст в файл
+                    File.WriteAllText(saveFileDialog.FileName, textToSave);
+                    MessageBox.Show("Файл успешно сохранен!", "Успех",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+        private void LoadTextFromFile()
+        {
+            // Создаем диалог открытия файла
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            // Настройки диалога
+            openFileDialog.Filter = "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*";
+            openFileDialog.FilterIndex = 1;
+            openFileDialog.Title = "Открыть текстовый файл";
+            openFileDialog.CheckFileExists = true; // Проверяем, что файл существует
+
+            // Показываем диалог
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    // Читаем текст из файла
+                    string fileContent = File.ReadAllText(openFileDialog.FileName);
+
+
+                    if (double.TryParse(fileContent, out double coeff))
+                    {
+                        CorrectionCoeff = coeff;
+                        toolStripTextBox1.Text = Math.Round(CorrectionCoeff, 4).ToString();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Введено некорректное значение", "Ошибка");
+                    }
+
+                    MessageBox.Show("Файл успешно загружен!", "Успех",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при загрузке: {ex.Message}", "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void toolStripTextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter) return;
+            ToolStripTextBox tb = toolStripTextBox1;
+            tb.KeyDown -= toolStripTextBox1_KeyDown;
+            MainMenuStrip.Focus();
+
+            tb.Text = tb.Text.Replace('.', ',');
+            if (double.TryParse(tb.Text, out double coeff))
+            {
+                CorrectionCoeff = coeff;
+            }
+            else
+            {
+                tb.Text = Math.Round(CorrectionCoeff, 4).ToString();
+                MessageBox.Show("Введено некорректное значение", "Ошибка");
+            }
+
+            tb.KeyDown += toolStripTextBox1_KeyDown;
+        }
     }
 }
