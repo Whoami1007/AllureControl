@@ -410,7 +410,8 @@ namespace Main
             ids.Add(numb);
 
             DataGridViewComboBoxCell cell = new DataGridViewComboBoxCell();
-            dataGridView1.Rows.Add(numb, id, name, hname, type, "", false, false, cell, 0, 0, currentDist);
+            cell.Items.AddRange("0", "1", "2", "3", "4+");
+            dataGridView1.Rows.Add(numb, id, name, hname, type, "", false, false, 0, 0, 0, currentDist);
         }
         public int? TryParseToInteger(string input)
         {
@@ -519,6 +520,7 @@ namespace Main
         {
             dataGridView1.Rows.Clear();
             MessageBox.Show("Данные успешно очищены", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ids.Clear();
 
         }
 
@@ -1221,6 +1223,12 @@ namespace Main
             }
 
             tb.KeyDown += toolStripTextBox1_KeyDown;
+        }
+
+        private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            // Вот тут может выскочить ошибка, это плохо
+
         }
     }
 }

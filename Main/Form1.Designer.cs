@@ -137,6 +137,7 @@
             dataGridView1.TabIndex = 2;
             dataGridView1.CellValueChanged += dataGridView1_CellValueChanged;
             dataGridView1.CurrentCellDirtyStateChanged += dataGridView1_CurrentCellDirtyStateChanged;
+            dataGridView1.DataError += dataGridView1_DataError;
             // 
             // Number
             // 
