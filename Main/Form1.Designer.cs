@@ -71,8 +71,6 @@
             toolStripMenuItem13 = new ToolStripMenuItem();
             очиститьToolStripMenuItem1 = new ToolStripMenuItem();
             коэффициентПересчётаToolStripMenuItem = new ToolStripMenuItem();
-            сохарнитьКоэффициентToolStripMenuItem = new ToolStripMenuItem();
-            загрузитьКоэффициентToolStripMenuItem = new ToolStripMenuItem();
             toolStripTextBox1 = new ToolStripTextBox();
             button2 = new Button();
             panel1 = new Panel();
@@ -280,14 +278,12 @@
             // сохранитьToolStripMenuItem
             // 
             сохранитьToolStripMenuItem.Name = "сохранитьToolStripMenuItem";
-            сохранитьToolStripMenuItem.Size = new Size(133, 22);
-            сохранитьToolStripMenuItem.Text = "Сохранить";
-            сохранитьToolStripMenuItem.Click += сохранитьToolStripMenuItem_Click;
+            сохранитьToolStripMenuItem.Size = new Size(130, 22);
             // 
             // toolStripMenuItem1
             // 
             toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(133, 22);
+            toolStripMenuItem1.Size = new Size(130, 22);
             toolStripMenuItem1.Text = "Открыть...";
             toolStripMenuItem1.Click += toolStripMenuItem1_Click;
             // 
@@ -421,24 +417,10 @@
             // 
             // коэффициентПересчётаToolStripMenuItem
             // 
-            коэффициентПересчётаToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { сохарнитьКоэффициентToolStripMenuItem, загрузитьКоэффициентToolStripMenuItem, toolStripTextBox1 });
+            коэффициентПересчётаToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { toolStripTextBox1 });
             коэффициентПересчётаToolStripMenuItem.Name = "коэффициентПересчётаToolStripMenuItem";
             коэффициентПересчётаToolStripMenuItem.Size = new Size(155, 20);
             коэффициентПересчётаToolStripMenuItem.Text = "Коэффициент пересчёта";
-            // 
-            // сохарнитьКоэффициентToolStripMenuItem
-            // 
-            сохарнитьКоэффициентToolStripMenuItem.Name = "сохарнитьКоэффициентToolStripMenuItem";
-            сохарнитьКоэффициентToolStripMenuItem.Size = new Size(221, 22);
-            сохарнитьКоэффициентToolStripMenuItem.Text = "Сохарнить коэффициент...";
-            сохарнитьКоэффициентToolStripMenuItem.Click += сохарнитьКоэффициентToolStripMenuItem_Click;
-            // 
-            // загрузитьКоэффициентToolStripMenuItem
-            // 
-            загрузитьКоэффициентToolStripMenuItem.Name = "загрузитьКоэффициентToolStripMenuItem";
-            загрузитьКоэффициентToolStripMenuItem.Size = new Size(221, 22);
-            загрузитьКоэффициентToolStripMenuItem.Text = "Загрузить коэффициент...";
-            загрузитьКоэффициентToolStripMenuItem.Click += загрузитьКоэффициентToolStripMenuItem_Click;
             // 
             // toolStripTextBox1
             // 
@@ -769,6 +751,7 @@
             Name = "Main";
             Text = "Главная Форма";
             FormClosing += Main_FormClosing;
+            Load += Main_Load;
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
@@ -856,8 +839,6 @@
         private DataGridViewTextBoxColumn penalty;
         private DataGridViewTextBoxColumn distance;
         private ToolStripMenuItem коэффициентПересчётаToolStripMenuItem;
-        private ToolStripMenuItem сохарнитьКоэффициентToolStripMenuItem;
-        private ToolStripMenuItem загрузитьКоэффициентToolStripMenuItem;
         private ToolStripTextBox toolStripTextBox1;
     }
 }
