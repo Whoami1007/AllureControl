@@ -1,11 +1,12 @@
+using OfficeOpenXml;
 using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO.Ports;
 using System.Management;
-using OfficeOpenXml;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Main
@@ -14,7 +15,7 @@ namespace Main
     public partial class Main : Form
     {
 
-        enum Allures
+        public enum Allures
         {
             Hallop,
             Run,
@@ -362,7 +363,6 @@ namespace Main
                     add_member(Allures.Step, int.Parse(item.Text));
                 }
             }
-
 
             /*if (number == TryParseToInteger(textBox2.Text))
             {
@@ -1194,6 +1194,202 @@ namespace Main
                 // При закрытии приложения обычно не показываем сообщения,
                 // чтобы не раздражать пользователя, но можно записать в лог
                 MessageBox.Show($"Ошибка при сохранении коэффициента: {ex.Message}");
+            }
+        }
+
+        private void сохранитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveDialog();
+        }
+
+        private void открытьФайлToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool isChecked = false;
+            if (HallopToolStripMenuItem.Checked || RunToolStripMenuItem.Checked || StepToolStripMenuItem.Checked)
+                isChecked = true;
+            if (!isChecked)
+            {
+                // Обработка ошибки, если не выбраны типы аллюра
+                MessageBox.Show("Список аллюров для участника пуст.\nВыберите \"Используемые аллюры\" в панели сверху (минимум 1)", "Внимание!");
+                return;
+            }
+
+
+            // Импорт из файла протокола формата .xlsx
+            List<StartData> list = LoadFromXlsx(GetXlsxFilePath());
+            if (list == null)
+            {
+                return;
+            }
+
+            dataGridView1.Rows.Clear();
+            ids.Clear();
+            foreach (StartData data in list) 
+            { 
+                data.Add_member(dataGridView1); 
+            }
+        }
+
+        public List<StartData> LoadFromXlsx(string filePath)
+        {
+            if (filePath == null)
+                return null;
+
+            if (!File.Exists(filePath)) 
+            {
+                MessageBox.Show("Файла не существует");
+                return null;
+            }
+            var result = new List<StartData>();
+
+            
+            // Если требуется, задайте лицензию один раз при старте приложения
+            // ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            var fileInfo = new FileInfo(filePath);
+            if (!fileInfo.Exists)
+                throw new FileNotFoundException($"Файл не найден: {filePath}");
+
+            using (var package = new ExcelPackage(fileInfo))
+            {
+                // Берём первый лист
+                var worksheet = package.Workbook.Worksheets[0];
+                if (worksheet.Dimension == null)
+                    return result; // лист пуст
+
+                int startRow = 1; // чтение с первой строки, так как заголовков нет
+                int endRow = worksheet.Dimension.End.Row;
+
+                for (int row = startRow; row <= endRow; row++)
+                {
+                    // Проверяем, не является ли строка полностью пустой
+                    // (смотрим первые 4 ячейки)
+                    bool hasData = false;
+                    for (int col = 1; col <= 4; col++)
+                    {
+                        var cellValue = worksheet.Cells[row, col].Value;
+                        if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue.ToString()))
+                        {
+                            hasData = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasData)
+                        continue; // пропускаем пустые строки
+
+                    var data = new StartData();
+
+                    data.Allure_types = FormAllures();
+                    if (data.Allure_types.Count == 0)
+                    {
+                        MessageBox.Show("ОШИБКА! Выберите хотя бы один аллюр");
+                        return result;
+                    }
+
+
+                    // Читаем номер старта (столбец A = индекс 1)
+                    var startNumberObj = worksheet.Cells[row, 1].Value;
+                    if (startNumberObj == null) continue;
+                    if (startNumberObj is double dStart)
+                    {
+                        data.StartNumber = (int)dStart;
+                        ids.Add(data.StartNumber.ToString());
+                    }
+
+                    // Читаем номер участника (столбец B = индекс 2)
+                    var participantNumberObj = worksheet.Cells[row, 2].Value;
+                    if (participantNumberObj == null) continue;
+                    if (participantNumberObj is double dPart)
+                        data.ParticipantNumber = (int)dPart;
+
+                    // ФИО (столбец C = индекс 3)
+                    data.FullName = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
+                    if (string.IsNullOrEmpty(data.FullName))
+                        continue;
+
+                    // Кличка лошади (столбец D = индекс 4)
+                    data.HorseName = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
+                    if (string.IsNullOrEmpty(data.HorseName))
+                        continue;
+
+                    result.Add(data);
+                }
+            }
+
+            return result;
+        }
+        private string GetXlsxFilePath()
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Excel Files|*.xlsx|All Files|*.*";
+                openFileDialog.Title = "Выберите файл Excel";
+                openFileDialog.CheckFileExists = true;
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    return openFileDialog.FileName;
+                }
+                return null; // или выбросить исключение
+            }
+        }
+        private List<Allures> FormAllures()
+        {
+            List<Allures> result = new List<Allures>();
+            foreach (ToolStripMenuItem item in HallopToolStripMenuItem.DropDownItems)
+            {
+                if (item.Checked)
+                {
+                    result.Add(Allures.Hallop);
+                    break;
+                }
+            }
+            foreach (ToolStripMenuItem item in RunToolStripMenuItem.DropDownItems)
+            {
+                if (item.Checked)
+                {
+                    result.Add(Allures.Run);
+                    break;
+                }
+            }
+            foreach (ToolStripMenuItem item in StepToolStripMenuItem.DropDownItems)
+            {
+                if (item.Checked)
+                {
+                    result.Add(Allures.Step);
+                    break;
+                }
+            }
+            return result;
+        }
+        
+    }
+    // dataGridView1.Rows.Add(numb, id, name, hname, type, "", false, false, 0, 0, 0, currentDist);
+    public class StartData
+    {
+        public List<Main.Allures> Allure_types { get; set; }
+        public int StartNumber { get; set; }
+        public int CurrentDist { get; set; }
+        public int ParticipantNumber { get; set; }
+        public string FullName { get; set; }
+        public string HorseName { get; set; }
+
+        public void Add_member (DataGridView dgv)
+        {
+            int id = 1;
+            if (Allure_types.Contains(Main.Allures.Hallop))
+            {
+                dgv.Rows.Add(StartNumber.ToString()+"." + id.ToString(), ParticipantNumber, FullName, HorseName, "Галлоп", "", false, false, 0, 0, 0, CurrentDist);
+                id += 1;
+            }
+            if (Allure_types.Contains(Main.Allures.Run))
+            {
+                dgv.Rows.Add(StartNumber.ToString() + "." + id.ToString(), ParticipantNumber, FullName, HorseName, "Рысь", "", false, false, 0, 0, 0, CurrentDist);
+                id += 1;
+            }
+            if (Allure_types.Contains(Main.Allures.Step))
+            {
+                dgv.Rows.Add(StartNumber.ToString() + "." + id.ToString(), ParticipantNumber, FullName, HorseName, "Шаг", "", false, false, 0, 0, 0, CurrentDist);
             }
         }
     }
